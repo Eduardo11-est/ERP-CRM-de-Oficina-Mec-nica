@@ -1,0 +1,176 @@
+// Dashboard Component Specific Styles
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 32px;
+  gap: 16px;
+  color: var(--text-secondary);
+  
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--border-color);
+    border-top: 4px solid var(--color-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-banner {
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: var(--border-radius-sm);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  color: var(--color-error);
+  
+  button {
+    margin-left: auto;
+  }
+}
+
+// KPI Stat Cards
+.stat-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -1px;
+  
+  &.text-success { color: var(--color-success); }
+  &.text-info { color: var(--color-info); }
+  &.text-warning { color: var(--color-warning); }
+  &.text-danger { color: var(--color-error); }
+}
+
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--border-radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  .material-symbols-outlined {
+    font-size: 24px;
+  }
+  
+  &.bg-success-light { background-color: rgba(16, 185, 129, 0.12); }
+  &.bg-info-light { background-color: rgba(6, 182, 212, 0.12); }
+  &.bg-warning-light { background-color: rgba(245, 158, 11, 0.12); }
+  &.bg-danger-light { background-color: rgba(239, 68, 68, 0.12); }
+}
+
+// Row layouts
+.analytics-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+  margin-bottom: 32px;
+  
+  @media (max-width: 992px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.tables-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  
+  @media (max-width: 992px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// Chart layout
+.chart-wrapper {
+  margin-top: 16px;
+  height: 180px;
+}
+
+// Distribution list
+.dist-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.dist-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dist-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.progress-bar-bg {
+  background-color: var(--bg-primary);
+  height: 6px;
+  border-radius: 3px;
+  width: 100%;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  background-color: var(--color-primary);
+  height: 100%;
+  border-radius: 3px;
+}
+
+// Header Row in Cards
+.card-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.view-all-link {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: var(--transition-fast);
+  cursor: pointer;
+  
+  &:hover {
+    color: var(--color-primary-hover);
+    text-decoration: underline;
+  }
+}
+
+.empty-state {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+  padding: 16px;
+}
+
+.font-bold {
+  font-weight: 600;
+}

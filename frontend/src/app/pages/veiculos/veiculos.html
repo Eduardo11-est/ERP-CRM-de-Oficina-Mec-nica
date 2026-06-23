@@ -1,0 +1,67 @@
+<div class="page-header">
+  <div class="page-title-group">
+    <h1>Frota de Veículos</h1>
+    <div class="subtitle">Lista geral de todos os carros cadastrados no sistema. Para associar novos veículos, acesse a ficha do cliente.</div>
+  </div>
+  <button class="btn btn-primary" (click)="viewOwner(0)">
+    <span class="material-symbols-outlined">group</span> Ir para Clientes
+  </button>
+</div>
+
+<div class="card search-card">
+  <div class="search-bar-row">
+    <span class="material-symbols-outlined search-icon">search</span>
+    <input
+      type="text"
+      placeholder="Pesquisar veículo por placa, modelo, marca ou proprietário..."
+      class="form-control search-input"
+      [value]="searchTerms()"
+      (input)="onSearchChange($event)"
+    />
+  </div>
+</div>
+
+<div *ngIf="loading()" class="loading-container">
+  <div class="spinner"></div>
+  <p>Carregando veículos...</p>
+</div>
+
+<div *ngIf="!loading() && filteredVeiculos().length === 0" class="empty-state">
+  <span class="material-symbols-outlined icon">garage</span>
+  <h3>Nenhum veículo encontrado</h3>
+  <p>Cadastre um cliente e associe um veículo à sua ficha.</p>
+</div>
+
+<div *ngIf="!loading() && filteredVeiculos().length > 0" class="vehicles-grid">
+  <div *ngFor="let veiculo of filteredVeiculos()" class="vehicle-premium-card">
+    <div class="card-header">
+      <span class="plate-badge">{{ veiculo.placa }}</span>
+      <span class="year-badge">{{ veiculo.ano }}</span>
+    </div>
+    
+    <div class="card-body">
+      <h3 class="model-title">{{ veiculo.marca }} <span>{{ veiculo.modelo }}</span></h3>
+      
+      <div class="info-list">
+        <div class="info-row">
+          <span class="material-symbols-outlined">person</span>
+          <span><strong>Proprietário:</strong> {{ veiculo.cliente_nome }}</span>
+        </div>
+        <div class="info-row">
+          <span class="material-symbols-outlined">speed</span>
+          <span><strong>Quilometragem:</strong> {{ veiculo.quilometragem | number }} km</span>
+        </div>
+        <div class="info-row" *ngIf="veiculo.chassi">
+          <span class="material-symbols-outlined">fingerprint</span>
+          <span><strong>Chassi:</strong> <code>{{ veiculo.chassi }}</code></span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card-footer">
+      <button class="btn btn-secondary btn-full" (click)="viewOwner(veiculo.cliente_id)">
+        <span class="material-symbols-outlined">visibility</span> Ver Proprietário
+      </button>
+    </div>
+  </div>
+</div>

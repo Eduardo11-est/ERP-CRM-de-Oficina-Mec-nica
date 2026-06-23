@@ -1,0 +1,62 @@
+<div class="app-shell">
+  <!-- Mobile Header -->
+  <header class="mobile-header">
+    <div class="mobile-brand">⚙️ Oficina<span>PRO</span></div>
+    <button class="menu-btn" (click)="toggleMobileMenu()">
+      <span class="material-symbols-outlined">menu</span>
+    </button>
+  </header>
+
+  <!-- Mobile Overlay -->
+  <div class="mobile-overlay" [class.active]="isMobileMenuOpen()" (click)="toggleMobileMenu()"></div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" [class.active]="isMobileMenuOpen()">
+    <div class="brand">
+      <span class="material-symbols-outlined brand-logo">construction</span>
+      <div class="brand-name">Oficina<span>PRO</span></div>
+    </div>
+
+    <nav class="nav-list">
+      <li>
+        <a class="nav-link" routerLink="/dashboard" routerLinkActive="active" (click)="closeMobileMenu()">
+          <span class="material-symbols-outlined">dashboard</span>
+          Dashboard
+        </a>
+      </li>
+      <li>
+        <a class="nav-link" routerLink="/clientes" routerLinkActive="active" (click)="closeMobileMenu()">
+          <span class="material-symbols-outlined">group</span>
+          Clientes
+        </a>
+      </li>
+      <li>
+        <a class="nav-link" routerLink="/veiculos" routerLinkActive="active" (click)="closeMobileMenu()">
+          <span class="material-symbols-outlined">directions_car</span>
+          Veículos
+        </a>
+      </li>
+      <li>
+        <a class="nav-link" routerLink="/pecas" routerLinkActive="active" (click)="closeMobileMenu()">
+          <span class="material-symbols-outlined">inventory_2</span>
+          Estoque de Peças
+        </a>
+      </li>
+      <li>
+        <a class="nav-link" routerLink="/ordens-servico" routerLinkActive="active" (click)="closeMobileMenu()">
+          <span class="material-symbols-outlined">assignment</span>
+          Ordens de Serviço
+        </a>
+      </li>
+    </nav>
+
+    <div class="sidebar-footer">
+      ERP/CRM v1.0.0
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <router-outlet></router-outlet>
+  </main>
+</div>

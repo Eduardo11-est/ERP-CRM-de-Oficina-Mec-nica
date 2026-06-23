@@ -1,0 +1,402 @@
+// Mecânica ERP/CRM Design System (Vanilla CSS/SCSS)
+
+:root {
+  // Cores de Fundo e Layout
+  --bg-primary: #121416;     // Fundo principal ultra escuro
+  --bg-secondary: #1a1d20;   // Fundo secundário (Sidebar, Cartões)
+  --bg-card: #22262a;        // Fundo do cartão/painel
+  --bg-input: #17191b;       // Fundo de inputs
+  
+  // Cores de Texto
+  --text-primary: #f3f4f6;   // Branco acinzentado de alto contraste
+  --text-secondary: #a0aab4; // Cinza médio para textos secundários
+  --text-muted: #6b757f;     // Cinza escuro para datas, legendas
+  
+  // Cores de Ação e Destaques
+  --color-primary: #ff6b00;        // Laranja Mecânico (Ação Principal)
+  --color-primary-hover: #e05e00;  // Laranja Hover
+  --color-secondary: #0084ff;      // Azul Mecânico (Ação Secundária)
+  --color-secondary-hover: #006ecb;// Azul Hover
+  
+  // Cores de Status Semânticos
+  --color-success: #10b981;  // Concluído / Pago (Esmeralda)
+  --color-warning: #f59e0b;  // Orçamento / Pendente (Âmbar)
+  --color-info: #06b6d4;     // Em Execução / Aprovado (Ciano)
+  --color-error: #ef4444;    // Cancelado / Estoque Crítico (Vermelho)
+  
+  // Bordas e Divisores
+  --border-color: #2e343a;   // Cinza de borda sutil
+  --border-focus: #ff6b00;   // Borda focada (Laranja)
+  
+  // Efeitos e Sombras
+  --border-radius-sm: 6px;
+  --border-radius-md: 10px;
+  --border-radius-lg: 16px;
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 8px 16px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 16px 24px rgba(0, 0, 0, 0.6);
+  --transition-fast: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+// Reset Global e Estilos de Base
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Outfit', 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+// Customizar Scrollbar
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+// Layout Principal (Shell)
+.app-shell {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  min-height: 100vh;
+  
+  @media (max-width: 992px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.main-content {
+  padding: 32px;
+  overflow-y: auto;
+  background-color: var(--bg-primary);
+  
+  @media (max-width: 768px) {
+    padding: 16px;
+  }
+}
+
+// Componentes de Cartão Premium (Glassmorphism sutil)
+.card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: rgba(255, 107, 0, 0.3);
+  }
+  
+  &.card-stat {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+// Títulos e Cabeçalhos
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  gap: 16px;
+  
+  @media (max-width: 576px) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+.page-title-group {
+  .subtitle {
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin-top: 4px;
+  }
+}
+
+// Botões Premium
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: var(--border-radius-sm);
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  border: none;
+  outline: none;
+  text-decoration: none;
+  white-space: nowrap;
+  
+  .material-symbols-outlined {
+    font-size: 18px;
+  }
+}
+
+.btn-primary {
+  background-color: var(--color-primary);
+  color: white;
+  
+  &:hover {
+    background-color: var(--color-primary-hover);
+    box-shadow: 0 4px 12px rgba(255, 107, 0, 0.35);
+  }
+  &:active {
+    transform: translateY(1px);
+  }
+}
+
+.btn-secondary {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  
+  &:hover {
+    background-color: var(--bg-secondary);
+    border-color: var(--text-secondary);
+  }
+}
+
+.btn-danger {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: var(--color-error);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  
+  &:hover {
+    background-color: var(--color-error);
+    color: white;
+  }
+}
+
+// Tabelas Customizadas Premium
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  background: var(--bg-secondary);
+  box-shadow: var(--shadow-sm);
+}
+
+.custom-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 14px;
+  
+  th, td {
+    padding: 16px;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+  }
+  
+  th {
+    background-color: rgba(26, 29, 32, 0.8);
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+  }
+  
+  tr {
+    transition: var(--transition-fast);
+    
+    &:last-child td {
+      border-bottom: none;
+    }
+    
+    &:hover td {
+      background-color: rgba(255, 255, 255, 0.02);
+    }
+  }
+}
+
+// Emblemas / Badges de Status
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 50px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.badge-orcamento {
+  background-color: rgba(245, 158, 11, 0.15);
+  color: var(--color-warning);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+.badge-aprovado {
+  background-color: rgba(6, 182, 212, 0.15);
+  color: var(--color-info);
+  border: 1px solid rgba(6, 182, 212, 0.3);
+}
+.badge-execucao {
+  background-color: rgba(0, 132, 255, 0.15);
+  color: var(--color-secondary);
+  border: 1px solid rgba(0, 132, 255, 0.3);
+}
+.badge-aguardando {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: var(--color-error);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+.badge-concluido {
+  background-color: rgba(16, 185, 129, 0.15);
+  color: var(--color-success);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+.badge-cancelado {
+  background-color: rgba(107, 117, 127, 0.15);
+  color: var(--text-secondary);
+  border: 1px solid rgba(107, 117, 127, 0.3);
+}
+
+// Formulários e Inputs
+.form-group {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  
+  label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+}
+
+.form-control {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: var(--border-radius-sm);
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 14px;
+  transition: var(--transition-fast);
+  outline: none;
+  
+  &:focus {
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 2px rgba(255, 107, 0, 0.2);
+  }
+  
+  &::placeholder {
+    color: var(--text-muted);
+  }
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+// Modal Responsivo Premium
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal-content {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+  animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &.modal-large {
+    max-width: 900px;
+  }
+}
+
+.modal-header {
+  padding: 24px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-body {
+  padding: 24px;
+}
+
+.modal-footer {
+  padding: 24px;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+// Grid de Dashboards
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+// Animações Auxiliares
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}

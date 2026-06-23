@@ -1,0 +1,135 @@
+<div class="page-header">
+  <div class="page-title-group">
+    <h1>Estoque de Peças</h1>
+    <div class="subtitle">Controle de peças de reposição. Monitore o estoque crítico para evitar falta de material na oficina.</div>
+  </div>
+  <button class="btn btn-primary" (click)="openNewPecaModal()">
+    <span class="material-symbols-outlined">add_to_photos</span> Nova Peça
+  </button>
+</div>
+
+<div class="card search-card">
+  <div class="search-bar-row">
+    <span class="material-symbols-outlined search-icon">search</span>
+    <input
+      type="text"
+      placeholder="Pesquisar por código ou descrição da peça..."
+      class="form-control search-input"
+      [value]="searchTerms()"
+      (input)="onSearchChange($event)"
+    />
+  </div>
+</div>
+
+<div *ngIf="loading()" class="loading-container">
+  <div class="spinner"></div>
+  <p>Carregando catálogo de peças...</p>
+</div>
+
+<div *ngIf="!loading() && filteredPecas().length === 0" class="empty-state">
+  <span class="material-symbols-outlined icon">inventory_2</span>
+  <h3>Nenhuma peça encontrada</h3>
+  <p>Registre novas peças e comece a controlar seu estoque.</p>
+</div>
+
+<div *ngIf="!loading() && filteredPecas().length > 0" class="card table-card">
+  <div class="table-container">
+    <table class="custom-table">
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Descrição</th>
+          <th>Custo (Compra)</th>
+          <th>Preço (Venda)</th>
+          <th>Margem (Markup)</th>
+          <th>Estoque Atual</th>
+          <th>Estoque Mínimo</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let peca of filteredPecas()">
+          <td><code>{{ peca.codigo }}</code></td>
+          <td><strong>{{ peca.descricao }}</strong></td>
+          <td>{{ peca.valor_compra | currency:'BRL' }}</td>
+          <td>{{ peca.valor_venda | currency:'BRL' }}</td>
+          <td class="markup-cell">
+            <span class="text-success">
+              +{{ ((peca.valor_venda - peca.valor_compra) / peca.valor_compra) * 100 | number:'1.0-0' }}%
+            </span>
+          </td>
+          <td>
+            <div class="stock-indicator" [class.critical]="isStockCritical(peca)">
+              <span class="dot"></span>
+              <strong class="stock-val">{{ peca.quantidade_estoque }}</strong>
+              <span class="warning-tag" *ngIf="isStockCritical(peca)">CRÍTICO</span>
+            </div>
+          </td>
+          <td>{{ peca.quantidade_minima }}</td>
+          <td class="action-cell">
+            <button class="btn-icon" (click)="openEditPecaModal(peca)" title="Editar">
+              <span class="material-symbols-outlined text-secondary">edit</span>
+            </button>
+            <button class="btn-icon" (click)="deletePeca(peca.id!)" title="Excluir">
+              <span class="material-symbols-outlined text-danger">delete</span>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal: Adicionar / Editar Peça -->
+<div *ngIf="isModalOpen()" class="modal-overlay">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>{{ selectedPeca() ? 'Editar Peça' : 'Nova Peça' }}</h2>
+      <button class="btn-icon" (click)="closeModal()">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div *ngIf="formErrors()" class="modal-error">
+        {{ formErrors() }}
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="p-codigo">Código da Peça *</label>
+          <input type="text" id="p-codigo" class="form-control" [(ngModel)]="formPeca().codigo" placeholder="Ex: OLEO-5W30" />
+        </div>
+        <div class="form-group">
+          <label for="p-desc">Descrição / Nome *</label>
+          <input type="text" id="p-desc" class="form-control" [(ngModel)]="formPeca().descricao" placeholder="Ex: Óleo de Motor 5W30 Sintético" />
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="p-custo">Valor de Compra (Custo) R$ *</label>
+          <input type="number" id="p-custo" class="form-control" [(ngModel)]="formPeca().valor_compra" placeholder="0.00" step="0.01" />
+        </div>
+        <div class="form-group">
+          <label for="p-venda">Valor de Venda (Cliente) R$ *</label>
+          <input type="number" id="p-venda" class="form-control" [(ngModel)]="formPeca().valor_venda" placeholder="0.00" step="0.01" />
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="p-estoque">Quantidade em Estoque</label>
+          <input type="number" id="p-estoque" class="form-control" [(ngModel)]="formPeca().quantidade_estoque" placeholder="0" />
+        </div>
+        <div class="form-group">
+          <label for="p-minimo">Estoque Mínimo (Alerta)</label>
+          <input type="number" id="p-minimo" class="form-control" [(ngModel)]="formPeca().quantidade_minima" placeholder="5" />
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" (click)="savePeca()">Salvar Registro</button>
+    </div>
+  </div>
+</div>

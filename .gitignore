@@ -1,0 +1,18 @@
+# Dependency directories
+node_modules/
+
+# Compiled output
+dist/
+.angular/
+
+# Local configuration
+.env
+.env.local
+
+# IDE configurations
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db

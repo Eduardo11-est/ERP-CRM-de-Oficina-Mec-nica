@@ -1,0 +1,221 @@
+<div class="page-header">
+  <div class="page-title-group">
+    <h1>Dashboard</h1>
+    <div class="subtitle">Bem-vindo ao OficinaPRO. Aqui está o resumo das suas operações.</div>
+  </div>
+  <button class="btn btn-primary" routerLink="/ordens-servico">
+    <span class="material-symbols-outlined">add</span> Nova Ordem de Serviço
+  </button>
+</div>
+
+<!-- Loading state -->
+<div *ngIf="loading()" class="loading-container">
+  <div class="spinner"></div>
+  <p>Carregando informações do painel...</p>
+</div>
+
+<!-- Error state -->
+<div *ngIf="error()" class="error-banner">
+  <span class="material-symbols-outlined">error</span>
+  <span>{{ error() }}</span>
+  <button class="btn btn-secondary btn-sm" (click)="loadStats()">Tentar Novamente</button>
+</div>
+
+<!-- Dashboard Stats -->
+<div *ngIf="!loading() && !error() && stats()" class="dashboard-content">
+  <div class="dashboard-grid">
+    <!-- Receita Total -->
+    <div class="card card-stat">
+      <div>
+        <div class="stat-label">Receita Total (Paga)</div>
+        <div class="stat-value text-success">{{ stats().receita_total | currency:'BRL' }}</div>
+      </div>
+      <div class="stat-icon bg-success-light text-success">
+        <span class="material-symbols-outlined">payments</span>
+      </div>
+    </div>
+
+    <!-- OS Ativas -->
+    <div class="card card-stat" routerLink="/ordens-servico">
+      <div>
+        <div class="stat-label">OS em Andamento</div>
+        <div class="stat-value text-info">{{ stats().os_ativas }}</div>
+      </div>
+      <div class="stat-icon bg-info-light text-info">
+        <span class="material-symbols-outlined">build</span>
+      </div>
+    </div>
+
+    <!-- Orçamentos Pendentes -->
+    <div class="card card-stat" routerLink="/ordens-servico">
+      <div>
+        <div class="stat-label">Orçamentos Pendentes</div>
+        <div class="stat-value text-warning">{{ stats().orcamentos_pendentes }}</div>
+      </div>
+      <div class="stat-icon bg-warning-light text-warning">
+        <span class="material-symbols-outlined">request_quote</span>
+      </div>
+    </div>
+
+    <!-- Estoque Crítico -->
+    <div class="card card-stat" routerLink="/pecas">
+      <div>
+        <div class="stat-label">Itens Sem Estoque</div>
+        <div class="stat-value text-danger">{{ stats().estoque_critico }}</div>
+      </div>
+      <div class="stat-icon bg-danger-light text-danger">
+        <span class="material-symbols-outlined">warning_amber</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Analytics and Chart Section -->
+  <div class="analytics-row">
+    <!-- Faturamento Mensal Chart (SVG) -->
+    <div class="card chart-card">
+      <h3>Faturamento Mensal (Últimos 6 meses)</h3>
+      <div class="chart-wrapper">
+        <svg viewBox="0 0 500 170" width="100%" height="100%">
+          <!-- Defs para gradientes -->
+          <defs>
+            <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#ff6b00" />
+              <stop offset="100%" stop-color="#ff9900" stop-opacity="0.3" />
+            </linearGradient>
+          </defs>
+
+          <!-- Linhas de fundo de escala -->
+          <line x1="40" y1="20" x2="480" y2="20" stroke="#2e343a" stroke-dasharray="4 4" />
+          <line x1="40" y1="70" x2="480" y2="70" stroke="#2e343a" stroke-dasharray="4 4" />
+          <line x1="40" y1="120" x2="480" y2="120" stroke="#2e343a" stroke-dasharray="4 4" />
+          <line x1="40" y1="140" x2="480" y2="140" stroke="#3f4448" />
+
+          <!-- Barras -->
+          <g *ngFor="let item of stats().faturamento_mensal; let i = index">
+            <!-- Posição X da barra = margem esquerda + (largura da coluna * i) -->
+            <rect
+              [attr.x]="60 + i * 70"
+              [attr.y]="140 - getBarHeight(item.total, getMaxMonthlyValue(stats().faturamento_mensal))"
+              width="36"
+              [attr.height]="getBarHeight(item.total, getMaxMonthlyValue(stats().faturamento_mensal))"
+              fill="url(#barGradient)"
+              rx="4"
+            />
+            <!-- Valor formatado sobre a barra -->
+            <text
+              [attr.x]="78 + i * 70"
+              [attr.y]="135 - getBarHeight(item.total, getMaxMonthlyValue(stats().faturamento_mensal))"
+              fill="#f3f4f6"
+              font-size="9"
+              text-anchor="middle"
+              font-weight="600"
+            >
+              {{ item.total | currency:'BRL':'symbol':'1.0-0' }}
+            </text>
+            <!-- Rótulo do mês (ex: 2026-06 -> 06/26) -->
+            <text
+              [attr.x]="78 + i * 70"
+              y="155"
+              fill="#a0aab4"
+              font-size="10"
+              text-anchor="middle"
+            >
+              {{ item.mes.split('-')[1] }}/{{ item.mes.split('-')[0].substring(2) }}
+            </text>
+          </g>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Formas de Pagamento Distribution -->
+    <div class="card distribution-card">
+      <h3>Meios de Pagamento Utilizados</h3>
+      <div class="dist-list">
+        <div *ngFor="let item of stats().formas_pagamento" class="dist-item">
+          <div class="dist-header">
+            <span>{{ item.forma_pagamento }}</span>
+            <strong>{{ item.total | currency:'BRL' }}</strong>
+          </div>
+          <div class="progress-bar-bg">
+            <div 
+              class="progress-bar-fill"
+              [style.width.%]="(item.total / stats().receita_total) * 100"
+            ></div>
+          </div>
+        </div>
+        <div *ngIf="stats().formas_pagamento.length === 0" class="empty-state">
+          Nenhum pagamento registrado ainda.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Tables Row -->
+  <div class="tables-row">
+    <!-- Últimas OS -->
+    <div class="card table-card">
+      <div class="card-header-row">
+        <h3>Ordens de Serviço Recentes</h3>
+        <a class="view-all-link" routerLink="/ordens-servico">Ver Todas</a>
+      </div>
+      <div class="table-container">
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Cliente</th>
+              <th>Veículo</th>
+              <th>Status</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let os of stats().ultimas_os" [routerLink]="['/ordens-servico']">
+              <td>#{{ os.id }}</td>
+              <td>{{ os.cliente_nome }}</td>
+              <td>{{ os.veiculo_modelo }}</td>
+              <td>
+                <span class="badge" [ngClass]="getStatusClass(os.status)">{{ os.status }}</span>
+              </td>
+              <td>{{ os.valor_total | currency:'BRL' }}</td>
+            </tr>
+            <tr *ngIf="stats().ultimas_os.length === 0">
+              <td colspan="5" class="text-center">Nenhuma ordem de serviço criada.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Estoque Crítico -->
+    <div class="card table-card">
+      <div class="card-header-row">
+        <h3>Peças com Estoque Baixo</h3>
+        <a class="view-all-link" routerLink="/pecas">Gerenciar Estoque</a>
+      </div>
+      <div class="table-container">
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Descrição</th>
+              <th>Qtd. Atual</th>
+              <th>Mínimo</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let peca of stats().pecas_criticas" routerLink="/pecas">
+              <td><code>{{ peca.codigo }}</code></td>
+              <td>{{ peca.descricao }}</td>
+              <td class="text-danger font-bold">{{ peca.quantidade_estoque }}</td>
+              <td>{{ peca.quantidade_minima }}</td>
+            </tr>
+            <tr *ngIf="stats().pecas_criticas.length === 0">
+              <td colspan="4" class="text-center text-success">Estoque saudável! Nenhuma peça crítica.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,415 @@
+<div class="page-header">
+  <div class="page-title-group">
+    <h1>Ordens de Serviço</h1>
+    <div class="subtitle">Gere orçamentos e controle a execução de serviços, peças e faturamento da oficina.</div>
+  </div>
+  <button class="btn btn-primary" (click)="openNewOsModal()">
+    <span class="material-symbols-outlined">add_circle</span> Criar Ordem de Serviço
+  </button>
+</div>
+
+<!-- Filtro de Busca -->
+<div class="card search-card">
+  <div class="search-bar-row">
+    <span class="material-symbols-outlined search-icon">search</span>
+    <input
+      type="text"
+      placeholder="Pesquisar OS por ID, cliente, placa ou modelo do veículo..."
+      class="form-control search-input"
+      [value]="searchTerms()"
+      (input)="onSearchChange($event)"
+    />
+  </div>
+</div>
+
+<!-- Carregamento -->
+<div *ngIf="loading()" class="loading-container">
+  <div class="spinner"></div>
+  <p>Carregando ordens de serviço...</p>
+</div>
+
+<!-- Lista Vazia -->
+<div *ngIf="!loading() && filteredOrdens().length === 0" class="empty-state">
+  <span class="material-symbols-outlined icon">assignment_late</span>
+  <h3>Nenhuma OS encontrada</h3>
+  <p>Crie uma ordem de serviço/orçamento para iniciar o fluxo.</p>
+</div>
+
+<!-- Tabela de OS -->
+<div *ngIf="!loading() && filteredOrdens().length > 0" class="card table-card">
+  <div class="table-container">
+    <table class="custom-table">
+      <thead>
+        <tr>
+          <th>OS ID</th>
+          <th>Cliente</th>
+          <th>Veículo (Placa)</th>
+          <th>Abertura</th>
+          <th>Status</th>
+          <th>Valor Total</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let os of filteredOrdens()">
+          <td><strong>#{{ os.id }}</strong></td>
+          <td>{{ os.cliente_nome }}</td>
+          <td>{{ os.veiculo_modelo }} (<code>{{ os.veiculo_placa }}</code>)</td>
+          <td>{{ os.data_abertura | date:'dd/MM/yyyy HH:mm' }}</td>
+          <td>
+            <span class="badge" [ngClass]="getStatusClass(os.status)">{{ os.status }}</span>
+          </td>
+          <td><strong>{{ os.valor_total | currency:'BRL' }}</strong></td>
+          <td class="action-cell">
+            <button class="btn btn-secondary btn-xs" (click)="openEditOsModal(os.id!)" title="Editar OS">
+              <span class="material-symbols-outlined">edit</span> Editar
+            </button>
+            <button class="btn btn-danger btn-xs" (click)="deleteOs(os.id!)" title="Excluir OS">
+              <span class="material-symbols-outlined">delete</span> Excluir
+            </button>
+            <!-- Faturar se for Concluída -->
+            <button 
+              *ngIf="os.status === 'Concluído'" 
+              class="btn btn-primary btn-xs" 
+              (click)="openFaturarModal(os)"
+              title="Gerar faturamento parcelado/misto"
+            >
+              <span class="material-symbols-outlined">payments</span> Faturar
+            </button>
+            <!-- Ver faturamento se já foi faturado -->
+            <button 
+              *ngIf="os.status === 'Concluído'"
+              class="btn btn-secondary btn-xs" 
+              (click)="viewFaturamento(os.id!)"
+              title="Ver contas a receber / parcelas"
+            >
+              <span class="material-symbols-outlined">account_balance_wallet</span> Parcelas
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal: Criar / Editar OS (Wizard Compacto) -->
+<div *ngIf="isModalOsOpen()" class="modal-overlay">
+  <div class="modal-content modal-large">
+    <div class="modal-header">
+      <h2>{{ selectedOsId() ? 'Editar Ordem de Serviço #' + selectedOsId() : 'Nova Ordem de Serviço' }}</h2>
+      <button class="btn-icon" (click)="closeOsModal()">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <div *ngIf="osFormErrors()" class="modal-error">
+        {{ osFormErrors() }}
+      </div>
+
+      <div class="form-grid-3">
+        <!-- Seleção de Cliente -->
+        <div class="form-group">
+          <label for="os-cliente">Cliente *</label>
+          <select id="os-cliente" class="form-control" [(ngModel)]="formOs().cliente_id" (change)="formOs().veiculo_id = 0">
+            <option [value]="0">Selecione o Cliente</option>
+            <option *ngFor="let c of clientes()" [value]="c.id">{{ c.nome }} ({{ c.documento }})</option>
+          </select>
+        </div>
+
+        <!-- Seleção de Veículo (Filtrado pelo Cliente) -->
+        <div class="form-group">
+          <label for="os-veiculo">Veículo *</label>
+          <select id="os-veiculo" class="form-control" [(ngModel)]="formOs().veiculo_id" [disabled]="!formOs().cliente_id">
+            <option [value]="0">Selecione o Veículo</option>
+            <option *ngFor="let v of formVeiculosFiltrados()" [value]="v.id">{{ v.marca }} {{ v.modelo }} - {{ v.placa }}</option>
+          </select>
+          <span class="input-hint" *ngIf="!formOs().cliente_id">Selecione o cliente primeiro</span>
+        </div>
+
+        <!-- Status -->
+        <div class="form-group">
+          <label for="os-status">Status *</label>
+          <select id="os-status" class="form-control" [(ngModel)]="formOs().status">
+            <option value="Orçamento">Orçamento</option>
+            <option value="Aprovado">Aprovado</option>
+            <option value="Em Execução">Em Execução</option>
+            <option value="Aguardando Peças">Aguardando Peças</option>
+            <option value="Concluído">Concluído</option>
+            <option value="Cancelado">Cancelado</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="detail-separator"></div>
+
+      <!-- Serviços Adicionados (Mão de Obra) -->
+      <div class="os-section">
+        <h3 class="section-title-icon"><span class="material-symbols-outlined">engineering</span> Mão de Obra & Serviços</h3>
+        <div class="add-item-row">
+          <select class="form-control" [value]="inputServId()" (change)="inputServId.set(+$any($event.target).value)">
+            <option [value]="0">Adicionar Serviço do Catálogo...</option>
+            <option *ngFor="let s of servicosCatalog()" [value]="s.id">{{ s.descricao }} - {{ s.valor_mao_obra | currency:'BRL' }}</option>
+          </select>
+          <button class="btn btn-secondary" (click)="addServicoToOs()">Adicionar</button>
+        </div>
+
+        <div class="table-container list-inner-table" *ngIf="formOs().servicos && formOs().servicos!.length > 0">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>Serviço</th>
+                <th>Mão de Obra</th>
+                <th width="50"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let s of formOs().servicos; let i = index">
+                <td>{{ s.descricao }}</td>
+                <td>{{ s.valor_unitario | currency:'BRL' }}</td>
+                <td>
+                  <button class="btn-icon text-danger" (click)="removeServicoFromOs(i)">
+                    <span class="material-symbols-outlined">delete</span>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <div class="form-group" style="margin-top: 16px;">
+          <label for="os-mao-obra">Custo Extra de Mão de Obra (R$)</label>
+          <input type="number" id="os-mao-obra" class="form-control" [(ngModel)]="formOs().valor_mao_obra" (input)="recalculateOsTotals()" placeholder="0.00" />
+        </div>
+      </div>
+
+      <div class="detail-separator"></div>
+
+      <!-- Peças Adicionadas (Estoque) -->
+      <div class="os-section">
+        <h3 class="section-title-icon"><span class="material-symbols-outlined">inventory_2</span> Peças de Reposição</h3>
+        <div class="add-item-row-3">
+          <select class="form-control" [value]="inputPecaId()" (change)="inputPecaId.set(+$any($event.target).value)">
+            <option [value]="0">Selecionar Peça do Estoque...</option>
+            <option *ngFor="let p of pecasCatalog()" [value]="p.id" [disabled]="p.quantidade_estoque <= 0">
+              {{ p.descricao }} (Cod: {{ p.codigo }}) - {{ p.valor_venda | currency:'BRL' }} [Qtd: {{ p.quantidade_estoque }}]
+            </option>
+          </select>
+          <input type="number" class="form-control" [value]="inputPecaQtd()" (input)="inputPecaQtd.set(+$any($event.target).value)" placeholder="Qtd" min="1" />
+          <button class="btn btn-secondary" (click)="addPecaToOs()">Adicionar</button>
+        </div>
+
+        <div class="table-container list-inner-table" *ngIf="formOs().pecas && formOs().pecas!.length > 0">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Descrição</th>
+                <th>Qtd</th>
+                <th>Preço Unit.</th>
+                <th>Total</th>
+                <th width="50"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let p of formOs().pecas; let i = index">
+                <td><code>{{ p.codigo }}</code></td>
+                <td>{{ p.descricao }}</td>
+                <td>{{ p.quantidade }}</td>
+                <td>{{ p.valor_unitario | currency:'BRL' }}</td>
+                <td>{{ p.quantidade * p.valor_unitario | currency:'BRL' }}</td>
+                <td>
+                  <button class="btn-icon text-danger" (click)="removePecaFromOs(i)">
+                    <span class="material-symbols-outlined">delete</span>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="detail-separator"></div>
+
+      <!-- Observações -->
+      <div class="form-group">
+        <label for="os-obs">Observações e Detalhes Técnicos</label>
+        <textarea id="os-obs" class="form-control" [(ngModel)]="formOs().observacoes" placeholder="Descreva os defeitos relatados, serviços executados ou peças sob encomenda..." rows="3"></textarea>
+      </div>
+
+      <!-- Total -->
+      <div class="total-os-summary">
+        <span>VALOR TOTAL DA OS:</span>
+        <strong>{{ formOs().valor_total | currency:'BRL' }}</strong>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeOsModal()">Cancelar</button>
+      <button class="btn btn-primary" (click)="saveOs()">Salvar OS</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Gerar Faturamento Parcelado e Misto -->
+<div *ngIf="isModalFaturarOpen()" class="modal-overlay">
+  <div class="modal-content modal-large">
+    <div class="modal-header">
+      <h2>Faturar Ordem de Serviço #{{ billingOsId() }}</h2>
+      <button class="btn-icon" (click)="closeFaturarModal()">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div *ngIf="billingErrors()" class="modal-error">
+        {{ billingErrors() }}
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Valor Total do Faturamento</label>
+          <input type="text" class="form-control" [value]="billingOsTotal() | currency:'BRL'" disabled />
+        </div>
+        <div class="form-group">
+          <label for="num-parcelas">Número de Parcelas</label>
+          <input 
+            type="number" 
+            id="num-parcelas" 
+            class="form-control" 
+            [value]="numInstallments()" 
+            (input)="onInstallmentCountChange($event)" 
+            min="1" 
+            max="12" 
+          />
+        </div>
+      </div>
+
+      <div class="detail-separator"></div>
+
+      <!-- Listagem de Parcelas -->
+      <h3>Detalhamento das Parcelas (Suporta Formas de Pagamento Mistas)</h3>
+      <div class="table-container list-inner-table" style="margin-top: 16px;">
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th width="80">Parcela</th>
+              <th>Valor (R$)</th>
+              <th>Forma de Pagamento</th>
+              <th>Status</th>
+              <th>Data de Vencimento</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of billingInstallments(); let i = index">
+              <td><strong>{{ p.numero_parcela }}x</strong></td>
+              <td>
+                <input 
+                  type="number" 
+                  class="form-control cell-input" 
+                  [(ngModel)]="p.valor" 
+                  step="0.01" 
+                />
+              </td>
+              <td>
+                <select class="form-control cell-input" [(ngModel)]="p.forma_pagamento" (change)="p.status = (p.status === 'Pago') ? 'Pago' : p.status">
+                  <option value="Pix">Pix</option>
+                  <option value="Dinheiro">Dinheiro</option>
+                  <option value="Cartão de Crédito">Cartão de Crédito</option>
+                  <option value="Cartão de Débito">Cartão de Débito</option>
+                  <option value="Boleto">Boleto</option>
+                </select>
+              </td>
+              <td>
+                <select class="form-control cell-input" [(ngModel)]="p.status">
+                  <option value="Pendente">Pendente</option>
+                  <option value="Pago">Pago (Recebido)</option>
+                </select>
+              </td>
+              <td>
+                <input 
+                  type="date" 
+                  class="form-control cell-input" 
+                  [(ngModel)]="p.data_vencimento" 
+                />
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeFaturarModal()">Cancelar</button>
+      <button class="btn btn-primary" (click)="saveFaturamento()">Confirmar Faturamento</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Visualizar Contas a Receber / Parcelas do Faturamento -->
+<div *ngIf="isModalVerFaturamentoOpen()" class="modal-overlay">
+  <div class="modal-content modal-large">
+    <div class="modal-header">
+      <h2>Faturamento da OS #{{ activeFaturamento()?.ordem_servico_id }}</h2>
+      <button class="btn-icon" (click)="closeVerFaturamentoModal()">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <div class="modal-body" *ngIf="activeFaturamento()">
+      <div class="billing-summary-row">
+        <div>
+          <span class="label">Valor Total do Faturamento:</span>
+          <strong>{{ activeFaturamento()!.valor_total | currency:'BRL' }}</strong>
+        </div>
+        <div>
+          <span class="label">Status Geral:</span>
+          <span class="badge" [ngClass]="getBillingStatusClass(activeFaturamento()!.status)">{{ activeFaturamento()!.status }}</span>
+        </div>
+      </div>
+
+      <div class="detail-separator"></div>
+
+      <h3>Controle de Cobrança / Parcelas</h3>
+      <div class="table-container list-inner-table" style="margin-top: 16px;">
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>Parcela</th>
+              <th>Valor</th>
+              <th>Meio de Recebimento</th>
+              <th>Status</th>
+              <th>Vencimento</th>
+              <th>Data de Pagamento</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of activeFaturamento()!.parcelas">
+              <td><strong>{{ p.numero_parcela }}x</strong></td>
+              <td>{{ p.valor | currency:'BRL' }}</td>
+              <td>{{ p.forma_pagamento }}</td>
+              <td>
+                <span class="badge badge-sm" [class.badge-concluido]="p.status === 'Pago'" [class.badge-orcamento]="p.status === 'Pendente'">
+                  {{ p.status }}
+                </span>
+              </td>
+              <td>{{ p.data_vencimento | date:'dd/MM/yyyy' }}</td>
+              <td>{{ p.data_pagamento ? (p.data_pagamento | date:'dd/MM/yyyy HH:mm') : 'Pendente' }}</td>
+              <td>
+                <button 
+                  *ngIf="p.status === 'Pendente'" 
+                  class="btn btn-primary btn-xs" 
+                  (click)="quitarParcela(p.id!)"
+                >
+                  <span class="material-symbols-outlined">check_circle</span> Dar Baixa (Pago)
+                </button>
+                <span *ngIf="p.status === 'Pago'" class="text-success font-bold">RECEBIDO</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeVerFaturamentoModal()">Fechar</button>
+    </div>
+  </div>
+</div>

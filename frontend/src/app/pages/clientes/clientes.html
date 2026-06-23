@@ -1,0 +1,257 @@
+<div class="page-header">
+  <div class="page-title-group">
+    <h1>Clientes & Veículos</h1>
+    <div class="subtitle">Cadastre seus clientes e associe os respectivos veículos para controle da oficina.</div>
+  </div>
+  <button class="btn btn-primary" (click)="openNewClienteModal()">
+    <span class="material-symbols-outlined">person_add</span> Novo Cliente
+  </button>
+</div>
+
+<!-- Split Layout -->
+<div class="split-view">
+  <!-- Left Side: Clientes List -->
+  <div class="card list-side">
+    <div class="search-bar-row">
+      <span class="material-symbols-outlined search-icon">search</span>
+      <input
+        type="text"
+        placeholder="Pesquisar por nome, documento ou telefone..."
+        class="form-control search-input"
+        [value]="searchTerms()"
+        (input)="onSearchChange($event)"
+      />
+    </div>
+
+    <div *ngIf="loading()" class="inner-loading">
+      <div class="spinner"></div>
+      <p>Carregando clientes...</p>
+    </div>
+
+    <div *ngIf="!loading() && filteredClientes().length === 0" class="empty-list">
+      <span class="material-symbols-outlined icon">contacts</span>
+      <p>Nenhum cliente cadastrado ou encontrado.</p>
+    </div>
+
+    <div *ngIf="!loading() && filteredClientes().length > 0" class="table-container flat-table">
+      <table class="custom-table">
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>CPF/CNPJ</th>
+            <th>Telefone</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr 
+            *ngFor="let cliente of filteredClientes()"
+            [class.active-row]="activeCliente()?.id === cliente.id"
+            (click)="selectCliente(cliente)"
+            class="clickable-row"
+          >
+            <td>
+              <div class="client-name-cell">
+                <strong>{{ cliente.nome }}</strong>
+                <span class="client-email">{{ cliente.email || 'Sem e-mail' }}</span>
+              </div>
+            </td>
+            <td>{{ cliente.documento }}</td>
+            <td>{{ cliente.telefone }}</td>
+            <td class="action-cell" (click)="$event.stopPropagation()">
+              <button class="btn-icon" (click)="openEditClienteModal(cliente)" title="Editar">
+                <span class="material-symbols-outlined text-secondary">edit</span>
+              </button>
+              <button class="btn-icon" (click)="deleteCliente(cliente.id!)" title="Excluir">
+                <span class="material-symbols-outlined text-danger">delete</span>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Right Side: Cliente Details & Veículos -->
+  <div class="card detail-side">
+    <div *ngIf="!activeCliente()" class="select-prompt">
+      <span class="material-symbols-outlined icon">info</span>
+      <h3>Selecione um Cliente</h3>
+      <p>Clique em uma linha da tabela de clientes para visualizar os detalhes cadastrais e seus veículos.</p>
+    </div>
+
+    <div *ngIf="activeCliente()" class="detail-container">
+      <div class="detail-section">
+        <div class="section-header">
+          <h3>Ficha do Cliente</h3>
+          <button class="btn btn-secondary btn-sm" (click)="openEditClienteModal(activeCliente()!)">
+            <span class="material-symbols-outlined">edit</span> Editar Cadastro
+          </button>
+        </div>
+        <div class="client-details-grid">
+          <div class="detail-item">
+            <span class="label">Nome Completo:</span>
+            <span class="val">{{ activeCliente()!.nome }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">CPF / CNPJ:</span>
+            <span class="val">{{ activeCliente()!.documento }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Telefone:</span>
+            <span class="val">{{ activeCliente()!.telefone }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">E-mail:</span>
+            <span class="val">{{ activeCliente()!.email || 'Não informado' }}</span>
+          </div>
+          <div class="detail-item full-width">
+            <span class="label">Endereço Completo:</span>
+            <span class="val">{{ activeCliente()!.endereco || 'Não informado' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="detail-separator"></div>
+
+      <div class="vehicles-section">
+        <div class="section-header">
+          <h3>Veículos Vinculados</h3>
+          <button class="btn btn-primary btn-sm" (click)="openNewVeiculoModal()">
+            <span class="material-symbols-outlined">add</span> Adicionar Veículo
+          </button>
+        </div>
+
+        <div *ngIf="activeVehicles().length === 0" class="empty-vehicles">
+          <span class="material-symbols-outlined icon">directions_car</span>
+          <p>Este cliente não possui nenhum veículo cadastrado.</p>
+        </div>
+
+        <div *ngIf="activeVehicles().length > 0" class="vehicles-grid">
+          <div *ngFor="let vehicle of activeVehicles()" class="vehicle-card">
+            <div class="vehicle-card-header">
+              <span class="vehicle-plate">{{ vehicle.placa }}</span>
+              <button class="btn-icon text-danger" (click)="deleteVeiculo(vehicle.id!)" title="Remover Veículo">
+                <span class="material-symbols-outlined">delete</span>
+              </button>
+            </div>
+            <div class="vehicle-card-body">
+              <div class="vehicle-model">{{ vehicle.marca }} {{ vehicle.modelo }}</div>
+              <div class="vehicle-info">
+                <span><strong>Ano:</strong> {{ vehicle.ano }}</span>
+                <span><strong>Km:</strong> {{ vehicle.quilometragem | number }} km</span>
+              </div>
+              <div class="vehicle-chassi" *ngIf="vehicle.chassi">
+                <strong>Chassi:</strong> <code>{{ vehicle.chassi }}</code>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Criar / Editar Cliente -->
+<div *ngIf="isModalClienteOpen()" class="modal-overlay">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>{{ selectedCliente() ? 'Editar Cliente' : 'Novo Cliente' }}</h2>
+      <button class="btn-icon" (click)="closeClienteModal()">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div *ngIf="formClienteErrors()" class="modal-error">
+        {{ formClienteErrors() }}
+      </div>
+      
+      <div class="form-group">
+        <label for="c-nome">Nome Completo *</label>
+        <input type="text" id="c-nome" class="form-control" [(ngModel)]="formCliente().nome" placeholder="Digite o nome completo" />
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="c-documento">CPF ou CNPJ *</label>
+          <input type="text" id="c-documento" class="form-control" [(ngModel)]="formCliente().documento" placeholder="000.000.000-00" />
+        </div>
+        <div class="form-group">
+          <label for="c-telefone">Telefone *</label>
+          <input type="text" id="c-telefone" class="form-control" [(ngModel)]="formCliente().telefone" placeholder="(00) 00000-0000" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="c-email">E-mail</label>
+        <input type="email" id="c-email" class="form-control" [(ngModel)]="formCliente().email" placeholder="cliente@provedor.com" />
+      </div>
+
+      <div class="form-group">
+        <label for="c-endereco">Endereço Completo</label>
+        <input type="text" id="c-endereco" class="form-control" [(ngModel)]="formCliente().endereco" placeholder="Rua, Número, Bairro, Cidade/UF" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeClienteModal()">Cancelar</button>
+      <button class="btn btn-primary" (click)="saveCliente()">Salvar Cadastro</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Adicionar Veículo -->
+<div *ngIf="isModalVeiculoOpen()" class="modal-overlay">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Cadastrar Veículo</h2>
+      <button class="btn-icon" (click)="closeVeiculoModal()">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div *ngIf="formVeiculoErrors()" class="modal-error">
+        {{ formVeiculoErrors() }}
+      </div>
+
+      <div class="form-group">
+        <label>Proprietário</label>
+        <input type="text" class="form-control" [value]="activeCliente()?.nome" disabled />
+      </div>
+
+      <div class="form-grid-3">
+        <div class="form-group">
+          <label for="v-marca">Marca *</label>
+          <input type="text" id="v-marca" class="form-control" [(ngModel)]="formVeiculo().marca" placeholder="Ex: Chevrolet" />
+        </div>
+        <div class="form-group">
+          <label for="v-modelo">Modelo *</label>
+          <input type="text" id="v-modelo" class="form-control" [(ngModel)]="formVeiculo().modelo" placeholder="Ex: Onix" />
+        </div>
+        <div class="form-group">
+          <label for="v-ano">Ano *</label>
+          <input type="number" id="v-ano" class="form-control" [(ngModel)]="formVeiculo().ano" placeholder="Ex: 2022" />
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="v-placa">Placa *</label>
+          <input type="text" id="v-placa" class="form-control" [(ngModel)]="formVeiculo().placa" placeholder="Ex: ABC1D23" style="text-transform: uppercase;" />
+        </div>
+        <div class="form-group">
+          <label for="v-km">Quilometragem Atual</label>
+          <input type="number" id="v-km" class="form-control" [(ngModel)]="formVeiculo().quilometragem" placeholder="Ex: 25000" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="v-chassi">Número do Chassi</label>
+        <input type="text" id="v-chassi" class="form-control" [(ngModel)]="formVeiculo().chassi" placeholder="Digite o chassi do carro" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeVeiculoModal()">Cancelar</button>
+      <button class="btn btn-primary" (click)="saveVeiculo()">Adicionar Veículo</button>
+    </div>
+  </div>
+</div>

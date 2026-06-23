@@ -1,0 +1,187 @@
+// Veiculos Fleet Page SCSS
+
+.search-card {
+  margin-bottom: 32px;
+  padding: 16px 24px;
+}
+
+// Search Row
+.search-bar-row {
+  position: relative;
+  
+  .search-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    pointer-events: none;
+  }
+  
+  .search-input {
+    padding-left: 44px;
+  }
+}
+
+// Fleet Grid
+.vehicles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.vehicle-premium-card {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-normal);
+  
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--color-primary);
+  }
+}
+
+// Plate layout resembling real license plates
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  
+  .plate-badge {
+    background-color: #f8fafc;
+    border: 2px solid #0f172a;
+    color: #0f172a;
+    font-weight: 800;
+    font-family: 'Outfit', 'Inter', monospace;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    letter-spacing: 1px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    position: relative;
+    
+    // Sutil barra azul no topo simbolizando Mercosul
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background-color: #002f6c;
+      border-radius: 4px 4px 0 0;
+    }
+  }
+  
+  .year-badge {
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+}
+
+.card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex-grow: 1;
+}
+
+.model-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  
+  span {
+    font-weight: 400;
+    color: var(--text-secondary);
+  }
+}
+
+.info-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  
+  .material-symbols-outlined {
+    font-size: 18px;
+    color: var(--color-primary);
+  }
+  
+  code {
+    background-color: rgba(255, 255, 255, 0.05);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    color: var(--text-primary);
+  }
+}
+
+.card-footer {
+  margin-top: auto;
+  border-top: 1px solid var(--border-color);
+  padding-top: 16px;
+}
+
+.btn-full {
+  width: 100%;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 32px;
+  gap: 16px;
+  color: var(--text-secondary);
+  
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--border-color);
+    border-top: 4px solid var(--color-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 64px 32px;
+  color: var(--text-secondary);
+  
+  .icon {
+    font-size: 56px;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+  }
+  
+  h3 {
+    margin-bottom: 8px;
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
